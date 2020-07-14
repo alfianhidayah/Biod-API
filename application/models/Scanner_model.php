@@ -22,7 +22,8 @@ class Scanner_model extends CI_Model
         $this->db->select("id_barang");
         $this->db->select("nama_barang");
         $this->db->where('id_kreditor', $id_kreditor);
-        return $this->db->get($this->table_barang)->result_object();
+        $this->db->where('status_id', 1);
+        return $this->db->get($this->table_barang)->result();
     }
 
     public function getIdTransaksi()

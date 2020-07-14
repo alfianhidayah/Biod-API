@@ -57,7 +57,7 @@ class Transaksiadmin extends CI_Controller
         } else {
             $this->response([
                 'status' => false,
-                'message' => 'ID Barang Tidak Ditemukan / Bukan Milik Kreditor Yang Bersangkutan',
+                'message' => 'Belum Pilih Barang Kredit !',
                 'transaksi' => null
             ], 200); //HTTP_BAD_REQUES
         }
