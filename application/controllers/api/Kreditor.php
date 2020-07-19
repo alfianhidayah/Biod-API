@@ -24,44 +24,48 @@ class Kreditor extends CI_Controller
         $this->load->model('Kreditor_model', 'kreditor');
     }
 
-    public function index_get()
-    {
-        //untuk cek apakah client minta params
-        //params nya id untuk kasus ini
-        $id_kreditor = $this->get('id_kreditor');
+    // public function index_get()
+    // {
+    //     //untuk cek apakah client minta params
+    //     //params nya id untuk kasus ini
+    //     $id_kreditor = $this->get('id_kreditor');
 
-        if ($id_kreditor === null) {
-            $kreditor = $this->kreditor->getKreditor();
-        } else {
-            $kreditor = $this->kreditor->getKreditor($id_kreditor);
-        }
-        if ($kreditor) {
-            $this->response([
-                'status' => true,
-                'data' => $kreditor
-            ], 200); // HTTP OK
-        } else {
-            $this->response([
-                'status' => false,
-                'message' => 'Kreditor Tidak Ditemukan'
-            ], 404); //HTTP_NOT_FOUND
-        }
-    }
+    //     if ($id_kreditor === null) {
+    //         $kreditor = $this->kreditor->getKreditor();
+    //     } else {
+    //         $kreditor = $this->kreditor->getKreditor($id_kreditor);
+    //     }
+    //     if ($kreditor) {
+    //         $this->response([
+    //             'status' => true,
+    //             'data' => $kreditor
+    //         ], 200); // HTTP OK
+    //     } else {
+    //         $this->response([
+    //             'status' => false,
+    //             'message' => 'Kreditor Tidak Ditemukan'
+    //         ], 404); //HTTP_NOT_FOUND
+    //     }
+    // }
 
-    public function index_put()
+    public function index_post()
     {
-        $id = $this->put("id_kreditor");
+        $id = $this->post("id_kreditor");
         $current_password = $this->kreditor->getPasswordById($id);
 
         //==================UBAH PASSWORD===================
-        if ($this->put("password")) {
-            $passwordBaru = array("password" => $this->put("password"));
-            $passwordBaru2 = array("password" => $this->put("password2"));
-            $dataLama = array("password" => $this->put("password_lama"));
+        if ($this->post("password")) {
+            $passwordBaru = array("password" => $this->post("password"));
+            $passwordBaru2 = array("password" => $this->post("password2"));
+            $dataLama = array("password" => $this->post("password_lama"));
+            // var_dump($current_password);
+            // var_dump($dataLama);
+            // die;
+            $passwordEncrypt = password_hash($passwordBaru["password"], PASSWORD_DEFAULT);
 
-            if ($dataLama === $current_password) {
+            if (password_verify($dataLama["password"], $current_password["password"])) {
                 if ($passwordBaru == $passwordBaru2) {
-                    if ($this->kreditor->updatePassword($passwordBaru, $id) > 0) {
+                    if ($this->kreditor->updatePassword($passwordEncrypt, $id) > 0) {
                         $this->response([
                             'status' => true,
                             'message' => 'Kata Sandi Telah Di Ubah !'
@@ -86,10 +90,10 @@ class Kreditor extends CI_Controller
                 ], 200); //HTTP_BAD_REQUES
             }
             //=============FORGOT PASSWORD==============
-        } else if ($this->put("nomor_hp") && $this->put("email")) {
+        } else if ($this->post("nomor_hp") && $this->post("email")) {
             //masukkan api
-            $nomorHp = $this->put("nomor_hp");
-            $email = $this->put("email");
+            $nomorHp = $this->post("nomor_hp");
+            $email = $this->post("email");
 
             $getNomorHp = $this->db->get_where('kreditor', ['nomor_hp' => $nomorHp])->row_array();
             if ($getNomorHp) {
@@ -103,12 +107,12 @@ class Kreditor extends CI_Controller
             }
         }
         //========================UBAH BIODATA===================== 
-        else if ($this->put("nama_kreditor") && $this->put("alamat") && $this->put("nomor_hp") && $this->put("nomor_ktp")) {
+        else if ($this->post("nama_kreditor") && $this->post("alamat") && $this->post("nomor_hp") && $this->post("nomor_ktp")) {
             $data = array(
-                "nama_kreditor" => $this->put("nama_kreditor"),
-                "alamat" => $this->put("alamat"),
-                "nomor_hp" => $this->put("nomor_hp"),
-                "nomor_ktp" => $this->put("nomor_ktp")
+                "nama_kreditor" => $this->post("nama_kreditor"),
+                "alamat" => $this->post("alamat"),
+                "nomor_hp" => $this->post("nomor_hp"),
+                "nomor_ktp" => $this->post("nomor_ktp")
             );
             if ($this->kreditor->updateKreditor($data, $id) > 0) {
                 $this->response([
@@ -137,7 +141,9 @@ class Kreditor extends CI_Controller
 
     private function _sendEmail($nomorHp, $email)
     {
+        $passwordSementara = base64_encode(random_bytes(5));
         $dataKreditor = $this->kreditor->getDataByPhone($nomorHp);
+        $dataPasswordSementara = $this->kreditor->updatePasswordSementara($nomorHp, $passwordSementara);
         $config = [
             'protocol' => 'smtp',
             'smtp_host' => 'ssl://smtp.googlemail.com',
@@ -164,7 +170,7 @@ class Kreditor extends CI_Controller
                                 <p>berikut adalah ID dan Password Bapak/Ibu</p>
                                 <p>Setelah Login segera lakukan perubahan Password Terbaru !</p>
                                 <h4>ID : ' . $dataKreditor['id_kreditor'] . ' </h4>
-                                <h4>PASSWORD : ' . $dataKreditor['password'] . '</h4>');
+                                <h4>PASSWORD : ' . $passwordSementara . '</h4>');
         // "Atas Nama : " . $dataKreditor['nama_kreditor'] . " ID kamu : " . $dataKreditor['id_kreditor'] . " Password kamu : " . $dataKreditor['password'] . " Segera lakukan penggantian password yang baru agar lebih aman"
 
         if ($this->email->send()) {

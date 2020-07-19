@@ -25,9 +25,11 @@ class Kreditor_model extends CI_Model
         return $this->db->affected_rows();
     }
 
-    public function updatePassword($passwordBaru, $id)
+    public function updatePassword($passwordEncrypt, $id)
     {
-        $this->db->update("kreditor", $passwordBaru, ["id_kreditor" => $id]);
+        $this->db->set('password', $passwordEncrypt);
+        $this->db->where('id_kreditor', $id);
+        $this->db->update('kreditor');
         return $this->db->affected_rows();
     }
 
@@ -48,6 +50,19 @@ class Kreditor_model extends CI_Model
         $this->db->select("nama_kreditor");
         $this->db->from("kreditor");
         $this->db->where("kreditor.nomor_hp", $nomorHp);
+        $query = $this->db->get()->row_array();
+        return $query;
+    }
+
+    public function updatePasswordSementara($nomorHp, $passwordSementara)
+    {
+        $passwordSementara = password_hash($passwordSementara, PASSWORD_DEFAULT);
+        $this->db->set('password', $passwordSementara);
+        $this->db->where('nomor_hp', $nomorHp);
+        $this->db->update('kreditor');
+
+        $this->db->select('password');
+        $this->db->from('kreditor');
         $query = $this->db->get()->row_array();
         return $query;
     }

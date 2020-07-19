@@ -33,10 +33,12 @@ class Auth extends CI_Controller
         #Set response API if Fail
         $response['FAIL'] = array('status' => FALSE, 'message' => 'Password / Username Salah', 'data' => null);
 
+        $id_kreditor = $this->post('id_kreditor');
+        $password = $this->post('password');
 
-        $data_user = $this->auth->get_user($this->post('id_kreditor'), $this->post('password'));
+        $data_user = $this->auth->get_user($id_kreditor);
 
-        if ($data_user) {
+        if (password_verify($password, $data_user['password'])) {
             $response['SUCCESS']['data'] = $data_user;
             $this->response($response['SUCCESS'], 200);
         } else {
