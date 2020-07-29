@@ -44,7 +44,7 @@ class Barang extends CI_Controller
             $this->response([
                 'status' => false,
                 'message' => 'Barang Tidak Ditemukan'
-            ], 404); //HTTP_NOT_FOUND
+            ], 200); //HTTP_NOT_FOUND
         }
     }
 }
